@@ -1,42 +1,99 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Morai Review — Next.js app
 
-## Getting Started
+This repository is a small Next.js 13+ app (App Router) that collects short reviews/suggestions for "MORAI" with an optional voice message recorded in the browser and stored in MongoDB. It includes a simple serverless API route for storing/fetching reviews.
 
-First, run the development server:
+This README explains how to clone, run locally, configure MongoDB, and deploy to Vercel.
 
-```bash
+---
+
+## Quick start (clone & run)
+
+Open a PowerShell terminal and run:
+
+```powershell
+git clone <repo-url>
+cd moraiReview
+npm install
+cp .env.local.example .env.local # see environment section
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then open http://localhost:3000 in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+If you prefer bash/macOS/linux replace the PowerShell commands with the usual `git`, `cp` etc.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## Environment variables
 
-To learn more about Next.js, take a look at the following resources:
+Create a `.env.local` in the project root with the following variables:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```text
+MONGODB_URI="<your-mongodb-connection-string>"
+MONGODB_DB=morai
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `MONGODB_URI`: MongoDB connection string (Atlas recommended for production). Example format:
+	`mongodb+srv://<user>:<password>@cluster0.example.mongodb.net/?retryWrites=true&w=majority`
+- `MONGODB_DB`: (optional) database name; defaults to `morai`.
 
-## Deploy on Vercel
+Important: `.env.local` is included in `.gitignore` by default — do not commit credentials.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Local dev behavior:
+- If `MONGODB_URI` is not provided, the API uses an in-memory fallback so you can still test the UI. This is only for development convenience.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
 
-## Environment & MongoDB
+## How the voice message feature works (short)
 
+- The browser requests microphone access and uses `MediaRecorder` to capture audio.
+- The recorded audio is converted to a data URL and included in the POST body when submitting a review.
+- The server stores the audio string in MongoDB (or returns/stores to in-memory array when no DB).
+- Visitors see an `<audio controls>` player for each review that contains audio.
+
+Note: Storing base64 audio in the DB works but is not ideal long-term — consider uploading to object storage and storing only URLs in the DB (see "Production notes").
+
+---
+
+## Development notes & troubleshooting
+
+- If you see a hydration warning about mismatched HTML between server and client, check that components that use browser-only APIs are marked as Client Components (top of file: `"use client"`) and avoid rendering different element types on server and client (for example: don't put `<div>` inside `<p>`).
+- If `framer-motion` or other optional libs are missing, either install them or remove their imports.
+- If the app fails to connect to MongoDB, make sure `MONGODB_URI` is correct and that your IP is allowed in Atlas (or use a connection string that permits access from anywhere for testing).
+
+---
+
+## Running in production / Deploy on Vercel
+
+1. Push the repo to GitHub (or a Git provider).
+2. On Vercel, import the project.
+3. In Vercel project settings, add the Environment Variables from the Environment section (`MONGODB_URI`, `MONGODB_DB`).
+4. Deploy. Vercel will build and run the Next.js app. The API route `/api/reviews` will use your MongoDB Atlas connection.
+
+Notes for Vercel:
+- Keep audio payloads short to avoid hitting Vercel body-size limits. For production use, upload audio to object storage and store URLs in the DB instead of embedding base64.
+
+---
+
+## Files of interest
+
+- `app/page.tsx` — main page UI and client-side recording logic
+- `app/api/reviews/route.ts` — serverless API route (GET/POST)
+- `lib/mongodb.ts` — helper for server-side MongoDB connection
+
+---
+
+## Recommended improvements (future work)
+
+- Replace base64 audio storage with S3/Cloudinary upload flow and store URLs.
+- Add server-side size checks and rate limiting to avoid abuse.
+- Add client-side max recording duration + progress/remaining time.
+- Add testing and simple E2E test (Playwright) for basic submit + playback flow.
+
+---
+
+If you want I can implement the S3 upload flow and server-side validation next.
 This project stores reviews in MongoDB. For local development create a `.env.local` file in the project root with:
 
 MONGODB_URI="your-mongodb-connection-string"
