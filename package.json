@@ -13,7 +13,6 @@
   "react": "19.2.3",
   "react-dom": "19.2.3",
   "mongodb": "5.9.0"
-  ,"framer-motion": "10.12.6"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
