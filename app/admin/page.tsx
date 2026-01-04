@@ -40,13 +40,17 @@ export default function AdminPage() {
           <div className="space-y-4">
             {reviews.map(r => (
               <div key={r.id} className="p-4 bg-white/5 rounded">
-                <div className="flex justify-between items-start">
-                  <div>
+                <div className="flex items-start gap-4">
+                  <div className="flex-1">
                     <div className="font-bold">{r.name}</div>
                     <div className="text-sm text-gray-300">{r.comment}</div>
-                    {r.audio ? <audio src={r.audio} controls className="w-full mt-2" /> : null}
+                    {r.audio ? (
+                      <div className="mt-2">
+                        <audio src={r.audio} controls className="w-full min-w-0" />
+                      </div>
+                    ) : null}
                   </div>
-                  <div>
+                  <div className="flex-shrink-0">
                     <button onClick={() => remove(r.id)} className="bg-red-600 px-3 py-2 rounded">Delete</button>
                   </div>
                 </div>

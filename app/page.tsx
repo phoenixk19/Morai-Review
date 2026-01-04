@@ -108,7 +108,10 @@ export default function MoraiReviewPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    (async () => {
+  // ask for confirmation before sending
+  if (!window.confirm('Submit this review?')) return;
+
+  (async () => {
       // include audio if recorded
       const audioData = await getRecordedDataUrl();
       const payload = { ...formData, audio: audioData };
